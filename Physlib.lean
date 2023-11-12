@@ -1,0 +1,4 @@
+import Physlib.NewtonianMechanics.KinematicsOneDimension
+import Physlib.NewtonianMechanics.ReferenceFrames
+
+#check NewtonianMechanics.laws.kinematicEquation1

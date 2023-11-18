@@ -112,6 +112,13 @@ namespace NewtonianMechanics
           _ = relVecZ vec3 t := by rw [eqZ]
           _ = (vec3 t).get 2 := by congr
 
+    theorem eqVecSumEqSumComponents : ∀ vec1 vec2 vec3 : ℝ → Vector ℝ 3, ∀ t : ℝ,
+                                      threeDVectorSum (vec1 t) (vec2 t) = vec3 t →
+                                      relVecX vec1 t + relVecX vec2 t = relVecX vec3 t ∧
+                                      relVecY vec1 t + relVecY vec2 t = relVecY vec3 t ∧
+                                      relVecZ vec1 t + relVecZ vec2 t = relVecZ vec3 t :=
+      sorry
+
     -- proof of function extensionality for rComponentsBetweenFramesIsSum wrapped in lambda
     -- ASSUMPTIONS USED: refFrames relR rComponentsBetweenFramesIsSum
     theorem funextRComponentsBetweenFramesIsSum :
@@ -133,6 +140,29 @@ namespace NewtonianMechanics
         And.intro eqX (And.intro eqY eqZ)
     notation:min "$funextRComponentsBetweenFramesIsSum" A ";" B ";" C ";" ABCAreFrames =>
       funextRComponentsBetweenFramesIsSum refFrames relR rComponentsBetweenFramesIsSum A B C ABCAreFrames
+
+    -- proof of function extensionality for vComponentsBetweenFramesIsSum wrapped in lambda
+    -- ASSUMPTIONS USED: relV
+    theorem funextVComponentsBetweenFramesIsSum :
+      ∀ A B C : String,
+      (∀ t : ℝ, threeDVectorSum (relV A B t) (relV B C t) = relV A C t) →
+      (fun t => relVecX (relV A C) t) = (fun t => relVecX (relV A B) t + relVecX (relV B C) t) ∧
+      (fun t => relVecY (relV A C) t) = (fun t => relVecY (relV A B) t + relVecY (relV B C) t) ∧
+      (fun t => relVecZ (relV A C) t) = (fun t => relVecZ (relV A B) t + relVecZ (relV B C) t) :=
+      fun A B C vBetweenFramesIsSum =>
+        let eqX : (fun t => relVecX (relV A C) t) = (fun t => relVecX (relV A B) t + relVecX (relV B C) t) := by
+          funext t
+          rw [← (eqVecSumEqSumComponents (relV A B) (relV B C) (relV A C) t (vBetweenFramesIsSum t)).left]
+        let eqY : (fun t => relVecY (relV A C) t) = (fun t => relVecY (relV A B) t + relVecY (relV B C) t) := by
+          funext t
+          rw [← (eqVecSumEqSumComponents (relV A B) (relV B C) (relV A C) t (vBetweenFramesIsSum t)).right.left]
+        let eqZ : (fun t => relVecZ (relV A C) t) = (fun t => relVecZ (relV A B) t + relVecZ (relV B C) t) := by
+          funext t
+          rw [← (eqVecSumEqSumComponents (relV A B) (relV B C) (relV A C) t (vBetweenFramesIsSum t)).right.right]
+        And.intro eqX (And.intro eqY eqZ)
+    notation:min "$funextVComponentsBetweenFramesIsSum" A ";" B ";" C ";" vBetweenFramesIsSum =>
+      funextVComponentsBetweenFramesIsSum relV A B C vBetweenFramesIsSum
+
 
   end causes
 
@@ -205,13 +235,56 @@ namespace NewtonianMechanics
     notation:min "$vBetweenFramesIsSum" A ";" B ";" C ";" t ";" ABCAreFrames =>
       vBetweenFramesIsSum refFrames relR relV rComponentsBetweenFramesIsSum relRDerivEqV A B C t ABCAreFrames
 
-
-    -- a proof that relV A C = relV A B + relV B C
+    -- a proof that relA A C = relA A B + relA B C
     -- ASSUMPTIONS USED:
     theorem aBetweenFramesIsSum : ∀ A B C : String, ∀ t : ℝ,
                     A ∈ refFrames ∧ B ∈ refFrames ∧ C ∈ refFrames →
                     relA A C t = threeDVectorSum (relA A B t) (relA B C t) :=
-      sorry
+      fun A B C t ABCAreFrames => by
+        let aEqDerivVAB := (relVDerivEqA A B t (And.intro ABCAreFrames.left ABCAreFrames.right.left))
+        let aEqDerivVBC := (relVDerivEqA B C t (And.intro ABCAreFrames.right.left ABCAreFrames.right.right))
+        let aEqDerivVAC := (relVDerivEqA A C t (And.intro ABCAreFrames.left ABCAreFrames.right.right))
+        let eqX : relVecX (relA A B) t + relVecX (relA B C) t = relVecX (relA A C) t := calc
+          relVecX (relA A B) t + relVecX (relA B C) t =
+          deriv (relVecX (relV A B)) t + deriv (relVecX (relV B C)) t := by
+            rw [aEqDerivVAB.left.deriv,
+                aEqDerivVBC.left.deriv]
+          _ = deriv (fun t => relVecX (relV A B) t + relVecX (relV B C) t) t := by
+            rw [(deriv_add aEqDerivVAB.left.differentiableAt
+                           aEqDerivVBC.left.differentiableAt)]
+          _ = deriv (fun t => relVecX (relV A C) t) t := by
+            rw [($funextVComponentsBetweenFramesIsSum A; B; C;
+                  (fun t' => by rw [($vBetweenFramesIsSum A; B; C; t'; ABCAreFrames)])).left]
+          _ = relVecX (relA A C) t := by
+            rw [← aEqDerivVAC.left.deriv]
+        let eqY : relVecY (relA A B) t + relVecY (relA B C) t = relVecY (relA A C) t := calc
+          relVecY (relA A B) t + relVecY (relA B C) t =
+          deriv (relVecY (relV A B)) t + deriv (relVecY (relV B C)) t := by
+            rw [aEqDerivVAB.right.left.deriv,
+                aEqDerivVBC.right.left.deriv]
+          _ = deriv (fun t => relVecY (relV A B) t + relVecY (relV B C) t) t := by
+            rw [(deriv_add aEqDerivVAB.right.left.differentiableAt
+                           aEqDerivVBC.right.left.differentiableAt)]
+          _ = deriv (fun t => relVecY (relV A C) t) t := by
+            rw [($funextVComponentsBetweenFramesIsSum A; B; C;
+                  (fun t' => by rw [($vBetweenFramesIsSum A; B; C; t'; ABCAreFrames)])).right.left]
+          _ = relVecY (relA A C) t := by
+            rw [← aEqDerivVAC.right.left.deriv]
+        let eqZ : relVecZ (relA A B) t + relVecZ (relA B C) t = relVecZ (relA A C) t := calc
+          relVecZ (relA A B) t + relVecZ (relA B C) t =
+          deriv (relVecZ (relV A B)) t + deriv (relVecZ (relV B C)) t := by
+            rw [aEqDerivVAB.right.right.deriv,
+                aEqDerivVBC.right.right.deriv]
+          _ = deriv (fun t => relVecZ (relV A B) t + relVecZ (relV B C) t) t := by
+            rw [(deriv_add aEqDerivVAB.right.right.differentiableAt
+                           aEqDerivVBC.right.right.differentiableAt)]
+          _ = deriv (fun t => relVecZ (relV A C) t) t := by
+            rw [($funextVComponentsBetweenFramesIsSum A; B; C;
+                  (fun t' => by rw [($vBetweenFramesIsSum A; B; C; t'; ABCAreFrames)])).right.right]
+          _ = relVecZ (relA A C) t := by
+            rw [← aEqDerivVAC.right.right.deriv]
+        rw [causes.eqSumComponentsEqVecSum (relA A B) (relA B C) (relA A C) t
+                                           (And.intro eqX (And.intro eqY eqZ))]
 
     -- a proof that if frames A and B have no relative a, they have the same a relative to all other frames
     -- ASSUMPTIONS USED:

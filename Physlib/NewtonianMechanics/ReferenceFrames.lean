@@ -117,7 +117,23 @@ namespace NewtonianMechanics
                                       relVecX vec1 t + relVecX vec2 t = relVecX vec3 t ∧
                                       relVecY vec1 t + relVecY vec2 t = relVecY vec3 t ∧
                                       relVecZ vec1 t + relVecZ vec2 t = relVecZ vec3 t :=
-      sorry
+      fun vec1 vec2 vec3 t vecSumEq =>
+        let eqX : relVecX vec1 t + relVecX vec2 t = relVecX vec3 t := calc
+          relVecX vec1 t + relVecX vec2 t = (threeDVectorSum (vec1 t) (vec2 t)).get 0 := by congr
+          _ = (threeDVectorSum (vec1 t) (vec2 t)).get 0 := by congr
+          _ = (vec3 t).get 0 := by rw [vecSumEq]
+          _ = relVecX vec3 t := by congr
+        let eqY : relVecY vec1 t + relVecY vec2 t = relVecY vec3 t := calc
+          relVecY vec1 t + relVecY vec2 t = (threeDVectorSum (vec1 t) (vec2 t)).get 1 := by congr
+          _ = (threeDVectorSum (vec1 t) (vec2 t)).get 1 := by congr
+          _ = (vec3 t).get 1 := by rw [vecSumEq]
+          _ = relVecY vec3 t := by congr
+        let eqZ : relVecZ vec1 t + relVecZ vec2 t = relVecZ vec3 t := calc
+          relVecZ vec1 t + relVecZ vec2 t = (threeDVectorSum (vec1 t) (vec2 t)).get 2 := by congr
+          _ = (threeDVectorSum (vec1 t) (vec2 t)).get 2 := by congr
+          _ = (vec3 t).get 2 := by rw [vecSumEq]
+          _ = relVecZ vec3 t := by congr
+        And.intro eqX (And.intro eqY eqZ)
 
     -- proof of function extensionality for rComponentsBetweenFramesIsSum wrapped in lambda
     -- ASSUMPTIONS USED: refFrames relR rComponentsBetweenFramesIsSum

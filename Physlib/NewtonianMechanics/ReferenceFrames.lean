@@ -57,13 +57,6 @@ namespace NewtonianMechanics
           vecA.get 1 + vecB.get 1,
           vecA.get 2 + vecB.get 2], rfl⟩
 
-    -- define the square of the magnitude of a cartesian vector
-    def vecMagSqr : Vector ℝ 3 → ℝ :=
-      fun vec =>
-        (vec.get 0) * (vec.get 0) +
-        (vec.get 1) * (vec.get 1) +
-        (vec.get 2) * (vec.get 2)
-
   /- ASSUMPTIONS -/
     -- displacement has the property that relR A C t = relR A B t + relR B C t
     variable (rComponentsBetweenFramesIsSum : ∀ A B C : String, ∀ t : ℝ,
@@ -87,6 +80,20 @@ namespace NewtonianMechanics
                              HasDerivAt (relVecZ (relV A B)) (relVecZ (relA A B) t) t)
 
   namespace causes
+
+    theorem sumVecZeroIsVec : ∀ vec : Vector ℝ 3, threeDVectorSum ⟨[0, 0, 0], rfl⟩ vec = vec :=
+      fun vec => by
+        ext i
+        match i with
+        | 0 => calc
+          (threeDVectorSum ⟨[0, 0, 0], rfl⟩ vec).get 0 = 0 + vec.get 0 := by congr
+          _ = vec.get 0 := by simp [add_zero (vec.get 0)]
+        | 1 => calc
+          (threeDVectorSum ⟨[0, 0, 0], rfl⟩ vec).get 1 = 0 + vec.get 1 := by congr
+          _ = vec.get 1 := by simp [add_zero (vec.get 1)]
+        | 2 => calc
+          (threeDVectorSum ⟨[0, 0, 0], rfl⟩ vec).get 2 = 0 + vec.get 2 := by congr
+          _ = vec.get 2 := by simp [add_zero (vec.get 2)]
 
     theorem eqSumComponentsEqVecSum : ∀ vec1 vec2 vec3 : ℝ → Vector ℝ 3, ∀ t : ℝ,
                                       relVecX vec1 t + relVecX vec2 t = relVecX vec3 t ∧
@@ -179,7 +186,6 @@ namespace NewtonianMechanics
     notation:min "$funextVComponentsBetweenFramesIsSum" A ";" B ";" C ";" vBetweenFramesIsSum =>
       funextVComponentsBetweenFramesIsSum relV A B C vBetweenFramesIsSum
 
-
   end causes
 
   namespace laws
@@ -252,7 +258,7 @@ namespace NewtonianMechanics
       vBetweenFramesIsSum refFrames relR relV rComponentsBetweenFramesIsSum relRDerivEqV A B C t ABCAreFrames
 
     -- a proof that relA A C = relA A B + relA B C
-    -- ASSUMPTIONS USED:
+    -- ASSUMPTIONS USED: refFrames relR relV relA rComponentsBetweenFramesIsSum relRDerivEqV relVDerivEqA
     theorem aBetweenFramesIsSum : ∀ A B C : String, ∀ t : ℝ,
                     A ∈ refFrames ∧ B ∈ refFrames ∧ C ∈ refFrames →
                     relA A C t = threeDVectorSum (relA A B t) (relA B C t) :=
@@ -301,13 +307,21 @@ namespace NewtonianMechanics
             rw [← aEqDerivVAC.right.right.deriv]
         rw [causes.eqSumComponentsEqVecSum (relA A B) (relA B C) (relA A C) t
                                            (And.intro eqX (And.intro eqY eqZ))]
+    notation:min "$aBetweenFramesIsSum" A ";" B ";" C ";" t ";" ABCAreFrames =>
+      aBetweenFramesIsSum refFrames relR relV relA rComponentsBetweenFramesIsSum relRDerivEqV relVDerivEqA A B C t ABCAreFrames
 
     -- a proof that if frames A and B have no relative a, they have the same a relative to all other frames
-    -- ASSUMPTIONS USED:
+    -- ASSUMPTIONS USED: refFrames relR relV relA rComponentsBetweenFramesIsSum relRDerivEqV relVDerivEqA
     theorem inertialFrames : ∀ A B C : String, ∀ t : ℝ,
                     A ∈ refFrames ∧ B ∈ refFrames ∧ C ∈ refFrames →
-                    vecMagSqr (relA B C t) = 0 → relA A B t = relA A C t :=
-      sorry
+                    relA A B t = ⟨[0, 0, 0], rfl⟩ →
+                    relA A C t = relA B C t :=
+      fun A B C t ABCAreFrames relAIsZero => calc
+        relA A C t = threeDVectorSum (relA A B t) (relA B C t) := by rw [← $aBetweenFramesIsSum A; B; C; t; ABCAreFrames]
+        _ = threeDVectorSum ⟨[0, 0, 0], rfl⟩ (relA B C t) := by rw [relAIsZero]
+        _ = relA B C t := by rw [causes.sumVecZeroIsVec]
+    notation:min "$inertialFrames" A ";" B ";" C ";" t ";" ABCAreFrames ";" relAIsZero =>
+      inertialFrames A B C t ABCAreFrames relAIsZero refFrames relR relV relA rComponentsBetweenFramesIsSum relRDerivEqV relVDerivEqA
 
   end laws
 

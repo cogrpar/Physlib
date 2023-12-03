@@ -1,4 +1,6 @@
 import Physlib.NewtonianMechanics.KinematicsOneDimension
 import Physlib.NewtonianMechanics.ReferenceFrames
+import Physlib.NewtonianMechanics.NewtonsLaws
+import Physlib.NewtonianMechanics.Momentum
 
 #check NewtonianMechanics.laws.kinematicEquation1

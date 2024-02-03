@@ -6,8 +6,8 @@ import Mathlib.MeasureTheory.Integral.FundThmCalculus
 import Mathlib.MeasureTheory.Group.Measure
 import Mathlib.Tactic.FieldSimp
 
-/- 
-DESCRIPTION 
+/-
+DESCRIPTION
 Proves the validity of the kinematic equations for functions with the
 properties characterized by those representing the motion of particles
 with constant acceleration in one dimension.
@@ -36,13 +36,13 @@ namespace NewtonianMechanics
 
     -- delta x is the change in the position vector between t1 and t2
     variable (Δx : ℝ → ℝ → ℝ)
-    
+
     -- delta v is the change in the velocity vector between t1 and t2
     variable (Δv : ℝ → ℝ → ℝ)
-    
+
     -- average velocity is defined as delta x over delta t
     variable (vAvrg : ℝ → ℝ → ℝ)
-    
+
     -- delta a is change in the acceleration vector between t1 and t2
     variable (Δa : ℝ → ℝ → ℝ)
 
@@ -79,10 +79,10 @@ namespace NewtonianMechanics
 
     -- average acceleration is defined as delta v over delta t
     variable (aAvrgEqDelVOverDelT : (t1 t2 : ℝ) → aAvrg t1 t2 = (Δv t1 t2) / (Δt t1 t2))
-    
+
     -- a is integrable for all intervals
     variable (aIntegrable : ∀ t : ℝ, IntervalIntegrable (fun τ => a τ) MeasureTheory.volume zero t)
-    
+
     -- the kinematic equations require the assumption that acceleration is constant
     variable (assumeConstantAcceleration : ∀ t : ℝ, a t = a 0)
 
@@ -162,12 +162,12 @@ namespace NewtonianMechanics
     notation:min "$kinematicEquation1" t =>
       kinematicEquation1 x Δt Δx vAvrg deltaT deltaX vAvrgEqDelXOverDelT t
 
-    -- a proof that v(t) = v₀ + at 
+    -- a proof that v(t) = v₀ + at
     -- ASSUMPTIONS USED: v a Δt Δv aAvrg deltaT deltaV vDerivEqA aAvrgEqDelVOverDelT aIntegrable assumeConstantAcceleration
     theorem kinematicEquation2 : ∀ t : ℝ, (v t) = (v 0) + (a t) * t :=
       fun t => by
         by_cases h : t = 0
-        . calc 
+        . calc
           (v t) = (v 0) := by rw [h]
           _ = (v 0) + (a t) * 0 := by ring
           _ = (v 0) + (a t) * t := by rw [← h]
@@ -195,7 +195,7 @@ namespace NewtonianMechanics
     -- a proof that v^2 = v₀^2 + 2ad
     -- ASSUMPTIONS USED: x v a Δt Δx Δv vAvrg aAvrg deltaT deltaX deltaV vAvrgEqDelXOverDelT vAvrgEqV0PlusVtDiv2 vDerivEqA aAvrgEqDelVOverDelT aIntegrable assumeConstantAcceleration
     theorem kinematicEquation4 : ∀ t : ℝ, (v t)^2 = (v 0)^2 + 2 * (a t) * (Δx 0 t) :=
-      fun t => 
+      fun t =>
         have kEq3Rewritten : Δx 0 t = (v 0) * t + 1/2 * (a t) * t^2 := calc
           Δx 0 t = x t - x 0 := by rw [deltaX]
           _ = (v 0) * t + 1/2 * (a t) * t^2 := by rw [$kinematicEquation3 t]; ring
